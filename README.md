@@ -35,6 +35,7 @@ A demonstration would showcase the "Code Debugging Agent" in action:
 Scenario: A student is stuck on an error in their Python web application code.
 
 Student Action: The student pastes the code and the error message into the learning platform.
+pip install -r requirements.txt
 
 Agent Process:
 
