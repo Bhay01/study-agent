@@ -1,7 +1,7 @@
 # Problem Statement: Bridging the Tech Skills Gap
 The traditional technology study model faces significant challenges that hinder effective learning and scalability
 
-Lack of Personalization: **A one-size-fits-all curriculum fails to adapt to individual student pace, prior knowledge, and unique learning styles, leading to disengagement and knowledge gaps.
+Lack of Personalization: A one-size-fits-all curriculum fails to adapt to individual student pace, prior knowledge, and unique learning styles, leading to disengagement and knowledge gaps.
 
 Repetitive Manual Tasks for Educators: Instructors are burdened with time-consuming, repetitive tasks like grading standardized assignments, providing basic troubleshooting, and curating remedial content, limiting their time for advanced mentorship and creative teaching.
 
