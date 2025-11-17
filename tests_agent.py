@@ -1,28 +1,48 @@
 import unittest
 
-# --- Mock Implementation of the Agent Class (for demonstration) ---
-# In a real project, you would replace this with:
-# from your_project.agent import Agent
-
-class Agent:
+# --- Mock Implementation of the StudyAgent Class ---
+class StudyAgent:
     """
-    A simple, hypothetical agent class with basic functionalities.
+    A hypothetical agent designed to simulate loading material, studying,
+    and tracking a knowledge level.
     """
-    def __init__(self, name="Default Agent", initial_state="idle"):
+    def __init__(self, name="Study Agent", initial_state="idle", knowledge_level=0):
         self.name = name
         self.state = initial_state
+        self.knowledge_level = knowledge_level # A score from 0 to 100
+        self.loaded_material = None
         self.memory = []
 
-    def perform_action(self, action_type):
-        """Changes the agent's state based on the action."""
-        if action_type == "work":
-            self.state = "working"
-            return f"{self.name} started working."
-        elif action_type == "rest":
-            self.state = "resting"
-            return f"{self.name} is now resting."
-        else:
-            return f"{self.name} performed an unknown action."
+    def load_material(self, topic: str):
+        """Loads a topic and prepares the agent for study."""
+        self.loaded_material = topic
+        self.state = "ready to study"
+        self.log_event(f"Loaded material: {topic}")
+        return f"{self.name} is now prepared to study {topic}."
+
+    def study(self, duration_minutes: int):
+        """
+        Simulates the act of studying, increasing the knowledge level based on duration.
+        Knowledge gain is capped at 100.
+        """
+        if not self.loaded_material:
+            self.state = "idle"
+            return f"{self.name} has no material loaded to study."
+
+        self.state = "studying"
+        # Simulate knowledge gain (1 point per 5 minutes of study)
+        gain = duration_minutes // 5
+        self.knowledge_level = min(100, self.knowledge_level + gain)
+        self.state = "ready for test"
+        self.log_event(f"Studied for {duration_minutes} mins. Knowledge now {self.knowledge_level}.")
+        return f"{self.name} finished studying. Knowledge level: {self.knowledge_level}%."
+
+    def check_knowledge(self, required_level=50) -> bool:
+        """Checks if the current knowledge level meets a required threshold."""
+        self.state = "testing"
+        is_sufficient = self.knowledge_level >= required_level
+        self.state = "idle"
+        return is_sufficient
 
     def log_event(self, event):
         """Adds an event to the agent's memory."""
@@ -30,79 +50,102 @@ class Agent:
         return True
 # --- End of Mock Implementation ---
 
-class TestAgent(unittest.TestCase):
+class TestStudyAgent(unittest.TestCase):
     """
-    Test suite for the Agent class using Python's unittest framework.
+    Test suite for the StudyAgent class.
     """
 
     def setUp(self):
         """
-        Set up method called before every test function.
-        It creates a fresh Agent instance for each test.
+        Creates a fresh StudyAgent instance for each test, starting with low knowledge.
         """
-        self.agent = Agent(name="TestAgent", initial_state="ready")
-        print(f"\nSetting up TestAgent: {self.agent.name}")
+        # Start the agent with 10% base knowledge
+        self.agent = StudyAgent(name="LearningBot", initial_state="idle", knowledge_level=10)
+        # print(f"\nSetting up LearningBot: {self.agent.name}") # Suppressing print for cleaner test output
 
-    def test_initialization(self):
+    def test_initialization_and_base_knowledge(self):
         """
-        Tests if the Agent is initialized correctly with name and state.
+        Tests if the StudyAgent is initialized correctly, including the knowledge level.
         """
-        print("Testing: Initialization")
-        self.assertEqual(self.agent.name, "TestAgent")
-        self.assertEqual(self.agent.state, "ready")
+        self.assertEqual(self.agent.name, "LearningBot")
+        self.assertEqual(self.agent.state, "idle")
+        self.assertEqual(self.agent.knowledge_level, 10)
         self.assertIsInstance(self.agent.memory, list)
-        self.assertFalse(self.agent.memory) # Check if memory is empty
 
-    def test_perform_work_action(self):
+    def test_load_material_transition(self):
         """
-        Tests the transition to the 'working' state.
+        Tests the transition to 'ready to study' state and material loading.
         """
-        print("Testing: Perform Work Action")
-        result = self.agent.perform_action("work")
-        self.assertEqual(self.agent.state, "working")
-        self.assertIn("started working", result)
+        result = self.agent.load_material("Quantum Physics")
+        self.assertEqual(self.agent.state, "ready to study")
+        self.assertEqual(self.agent.loaded_material, "Quantum Physics")
+        self.assertIn("prepared to study Quantum Physics", result)
 
-    def test_perform_rest_action(self):
+    def test_study_knowledge_gain(self):
         """
-        Tests the transition to the 'resting' state.
+        Tests if studying increases the knowledge level and updates state.
         """
-        print("Testing: Perform Rest Action")
-        result = self.agent.perform_action("rest")
-        self.assertEqual(self.agent.state, "resting")
-        self.assertIn("now resting", result)
+        self.agent.load_material("History of Python")
+        initial_knowledge = self.agent.knowledge_level # 10
+        
+        # 30 minutes of study should increase knowledge by 30 // 5 = 6 points
+        duration = 30
+        result = self.agent.study(duration)
+        
+        expected_knowledge = initial_knowledge + (duration // 5)
+        self.assertEqual(self.agent.knowledge_level, expected_knowledge) # 10 + 6 = 16
+        self.assertEqual(self.agent.state, "ready for test")
+        self.assertIn("finished studying", result)
 
-    def test_perform_unknown_action(self):
+    def test_study_without_material_failure(self):
         """
-        Tests the response for an action that is not defined.
-        The state should remain unchanged ('ready').
+        Tests the defensive behavior when study is called without loaded material.
         """
-        print("Testing: Perform Unknown Action")
-        initial_state = self.agent.state
-        result = self.agent.perform_action("think_deeply")
-        self.assertEqual(self.agent.state, initial_state) # State should not change
-        self.assertIn("unknown action", result)
+        initial_knowledge = self.agent.knowledge_level
+        result = self.agent.study(60)
+        
+        self.assertEqual(self.agent.knowledge_level, initial_knowledge) # Knowledge should not change
+        self.assertEqual(self.agent.state, "idle") # Should return to idle
+        self.assertIn("has no material loaded", result)
 
-    def test_log_event(self):
+    def test_knowledge_check_pass(self):
         """
-        Tests logging an event and verifies it is added to the memory list.
+        Tests if check_knowledge returns True when the level is sufficient.
         """
-        print("Testing: Log Event")
-        event = "Model trained successfully."
-        self.agent.log_event(event)
-        self.assertEqual(len(self.agent.memory), 1)
-        self.assertIn(event, self.agent.memory)
+        # Manually boost knowledge to ensure passing
+        self.agent.knowledge_level = 75
+        is_pass = self.agent.check_knowledge(required_level=50)
+
+        self.assertTrue(is_pass)
+        self.assertEqual(self.agent.state, "idle")
+
+    def test_knowledge_check_fail(self):
+        """
+        Tests if check_knowledge returns False when the level is insufficient.
+        """
+        # Agent starts at 10, which is insufficient for 50
+        is_pass = self.agent.check_knowledge(required_level=50)
+
+        self.assertFalse(is_pass)
+        self.assertEqual(self.agent.state, "idle")
+
+    def test_knowledge_cap(self):
+        """
+        Tests that the knowledge level cannot exceed 100.
+        """
+        self.agent.load_material("Everything")
+        self.agent.knowledge_level = 90
+        # Study for 60 minutes, which should add 12 points (90+12 = 102)
+        self.agent.study(60)
+        self.assertEqual(self.agent.knowledge_level, 100) # Should be capped at 100
 
     def tearDown(self):
         """
         Clean up method called after every test function.
         """
-        # In this simple example, cleanup is minimal, but could include
-        # closing database connections, deleting temporary files, etc.
         self.agent = None
-        print(f"Tearing down TestAgent.")
 
 
 if __name__ == '__main__':
     # Runs the test suite when the file is executed directly
-    print("--- Starting Agent Test Suite ---")
     unittest.main()
