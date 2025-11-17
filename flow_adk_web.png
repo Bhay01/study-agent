@@ -1,1 +1,94 @@
+Interactive Study Agent Prototype Structure
 
+This architecture is adapted from the robust agent model to provide personalized study planning, content generation, and testing tools.
+
+1. Core Agent (Interactive Entry Point)
+
+Agent Name: interactive_study_agent
+Function: The central orchestrator. It receives the user's initial goal (e.g., "Study for the Civil War exam," "Learn about Fourier Transforms") and delegates tasks to the appropriate loop agents and specialized tools.
+
+2. Planning and Research Loop
+
+Loop Agent Name: robust_learning_planner (Loop Agent)
+Function: Ensures a comprehensive, validated study plan is generated before content creation begins. It iterates until the plan is approved by the internal validation checker.
+
+Component Name
+
+Type
+
+Description
+
+learning_planner_agent
+
+Agent
+
+Generates the initial study outline, prioritizing topics, allocating time, and identifying key concepts based on the user's input.
+
+plan_validation_checker
+
+Checker Tool
+
+Reviews the generated outline against criteria like completeness, topic relevance, and balance. It can prompt the learning_planner_agent to refine the plan.
+
+Google Search
+
+Tool
+
+Used initially to retrieve external information (e.g., historical timelines, official syllabus details, basic definitions) to inform the plan.
+
+3. Content Generation and Verification Loop
+
+Loop Agent Name: robust_explanation_generator (Loop Agent)
+Function: Focuses on generating high-quality, accurate, and digestible explanations for individual concepts, self-correcting for accuracy.
+
+Component Name
+
+Type
+
+Description
+
+concept_explainer_agent
+
+Agent
+
+Takes a topic from the learning_planner and generates a detailed, easy-to-understand explanation, including examples and analogies.
+
+accuracy_validation_checker
+
+Checker Tool
+
+Verifies the factual accuracy, tone, and depth of the generated explanation. It prompts the concept_explainer_agent to refine or elaborate if the content is too brief or factually weak.
+
+4. Specialized Agents and Tools
+
+These components provide additional study utility based on the generated content.
+
+Component Name
+
+Type
+
+Description
+
+quiz_generator_agent
+
+Agent
+
+Transforms the core explanatory content into various test formats (multiple choice, true/false, short answer questions).
+
+flashcard_formatter_agent
+
+Agent
+
+Extracts key definitions, dates, formulas, or concepts and formats them specifically for review (e.g., "Front: Term
+
+document_analyzer_tool
+
+Tool
+
+Allows the agent to ingest and analyze specific, private documents (like a syllabus or PDF textbook chapter) provided by the user for grounding the content.
+
+save_study_notes_to_file
+
+Tool
+
+Saves the final plan, notes, quizzes, or flashcard deck to a file for easy download or archival.
