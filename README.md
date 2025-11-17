@@ -15,7 +15,6 @@ Proactive Personalization: Agents can monitor a student's performance, identify 
 Complex Task Execution: Unlike simple programs, agents can manage multi-step, complex workflows, such as setting up a virtual coding environment, debugging a student's code based on defined criteria, or orchestrating an entire project simulation.
 
 Adaptive Tutoring: They can act as Intelligent Tutoring Systems (ITS), engaging in sophisticated, context-aware dialogues to guide students through difficult concepts and challenge them when ready.
-![newtechstudy](https://github.com/user-attachments/assets/07064809-b9cc-49ec-85fb-db9474f2ca89)
 
 
 # Why Created: Enhancing Tech Education
