@@ -1,1 +1,53 @@
+# --- Core AI/LLM Framework (Choose one or more) ---
+# For connecting to a Google Generative AI model like Gemini
+google-generativeai
 
+# For popular LLM orchestration/agent frameworks (often used together)
+# langchain
+# pydantic # For structured output and data validation (highly recommended for agents)
+# instructor # For easier integration of structured output with LLMs
+# crewai # For building multi-agent systems
+
+# --- Web/Tooling/Search Capabilities (Essential for a study agent) ---
+# Allows the agent to search the web for real-time information (e.g., historical dates, current events)
+# duckduckgo-search
+
+# For making HTTP requests if you need to call other APIs
+# requests
+
+# --- Server/Deployment (If your agent has a web interface or API) ---
+# Flask is a lightweight web framework
+# Flask
+
+# For managing environment variables (like API keys)
+# python-dotenv
+
+# --- Data Handling and Analysis (If your agent processes course material, notes, or data) ---
+# For data manipulation and analysis
+# pandas
+# numpy
+
+# --- Vector Store / Memory / RAG (Retrieval Augmented Generation) ---
+# If your agent needs long-term memory or to process your own documents (e.g., textbooks)
+# chromadb # A popular, easy-to-use vector database
+# faiss-cpu # A library for efficient similarity search and clustering
+
+# For loading and processing different document types
+# pypdf
+# openpyxl # For Excel files
+# python-docx # For Word files
+
+# --- Development/Testing Dependencies (Optional, for building/checking the code) ---
+# For testing your code
+# pytest
+
+# For code formatting and linting
+# black
+# flake8
+
+# --- Specific LLM/ML Libraries (Only if you're building a custom ML model) ---
+# tensorflow
+# torch
+# scikit-learn
+
+pip install -r requirements.txt
