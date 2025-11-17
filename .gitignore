@@ -1,1 +1,58 @@
+# --- General Operating System & Editor Files ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~
 
+# --- Python-Specific Files ---
+# Compiled python files
+*.pyc
+__pycache__/
+venv/
+env/
+.env
+
+# Distribution and packaging
+.Python
+build/
+dist/
+*.egg-info/
+htmlcov/
+.tox/
+.coverage
+
+# Testing and linting
+.mypy_cache/
+.pytest_cache/
+
+# --- Logs, Data, and Output ---
+# Log files
+*.log
+logs/
+
+# Model and checkpoint files
+*.pt  # PyTorch model files
+*.pth # PyTorch checkpoint files
+*.onnx
+*.h5  # Keras/TensorFlow HDF5 model files
+checkpoints/
+models/
+output/
+results/
+data/  # You might want to track a small dataset but ignore large ones
+/data/*
+!/data/.gitkeep # Optionally keep the folder tracked if empty
+
+# --- Jupyter Notebook Artifacts ---
+.ipynb_checkpoints/
+
+# --- Environment Configuration ---
+# Local configuration or secrets that should not be committed
+config/local_settings.py
+secrets.json
+.local_config
+
+# If you use a virtual environment named 'study_env' specifically, add it.
+# study_env/
