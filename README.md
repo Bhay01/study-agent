@@ -26,7 +26,8 @@ For Educators: To automate tedious operational tasks, allowing human instructors
 
 # Demo: A Guided Debugging Agent 🛠️
 
-http://googleusercontent.com/image_generation_content/2
+![unnamed](https://github.com/user-attachments/assets/f8a592dc-8512-4a3f-91d7-ccca61ccf81b)
+
 
 
 A demonstration would showcase the "Code Debugging Agent" in action:
