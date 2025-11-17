@@ -1,1 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Note Taker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for aesthetic appeal */
+        body { font-family: 'Inter', sans-serif; background-color: #f7f7f7; }
+        .card { background-color: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
+        .input-area { border: 1px solid #ccc; border-radius: 8px; padding: 10px; margin-bottom: 15px; width: 100%; box-sizing: border-box; }
+        .note-item { transition: all 0.3s ease; }
+        .note-item:hover { background-color: #f0f4ff; }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen flex items-start justify-center">
+    <div class="w-full max-w-2xl">
+        <div class="card p-6 mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Secure Note Taker</h1>
+            <p class="text-sm text-gray-600 mb-4" id="auth-status">Initializing Firebase...</p>
+        </div>
 
+        <!-- Add Note Form -->
+        <div class="card p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Add a New Note</h2>
+            <textarea id="note-input" class="input-area resize-none" rows="3" placeholder="Write your note here..."></textarea>
+            <button id="add-note-btn"
+                    class="w-full bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 transition duration-150 shadow-md disabled:opacity-50"
+                    disabled>
+                Add Note
+            </button>
+        </div>
+
+        <!-- Note List -->
+        <div class="card p-6">
+            <h2 class="text-xl font-semibold mb-4">Your Private Notes (Realtime)</h2>
+            <ul id="notes-list" class="space-y-3">
+                <li class="text-center text-gray-500 p-4" id="loading-message">Waiting for authentication to load notes...</li>
+            </ul>
+        </div>
+
+    </div>
+
+    <!-- Firebase Imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, addDoc, onSnapshot, collection, query, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables provided by the environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db;
+        let auth;
+        let userId = null;
+        const notesCollectionPath = (uid) => `artifacts/${appId}/users/${uid}/notes`;
+
+        const notesListElement = document.getElementById('notes-list');
+        const noteInputElement = document.getElementById('note-input');
+        const addNoteButton = document.getElementById('add-note-btn');
+        const authStatusElement = document.getElementById('auth-status');
+
+        // Function to handle database listening and display (This is the critical function that must run AFTER auth)
+        function setupNotesListener(database, uid) {
+            console.log("Setting up Firestore listener for:", notesCollectionPath(uid));
+            document.getElementById('loading-message').textContent = 'Loading notes...';
+
+            const notesQuery = query(collection(database, notesCollectionPath(uid)));
+
+            onSnapshot(notesQuery, (snapshot) => {
+                const notes = [];
+                snapshot.forEach((doc) => {
+                    notes.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Sort the notes by timestamp (newest first, client-side sort to avoid index errors)
+                notes.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+
+                notesListElement.innerHTML = ''; // Clear previous notes
+
+                if (notes.length === 0) {
+                    notesListElement.innerHTML = `<li class="text-center text-gray-500 p-4">No notes found. Add one above!</li>`;
+                    return;
+                }
+
+                notes.forEach(note => {
+                    const li = document.createElement('li');
+                    li.className = 'note-item p-4 border-b border-gray-100 flex justify-between items-start';
+                    const noteText = note.content || 'Untitled Note';
+                    const time = note.timestamp ? new Date(note.timestamp.seconds * 1000).toLocaleTimeString() : 'N/A';
+                    
+                    li.innerHTML = `
+                        <div>
+                            <p class="text-gray-900 font-medium whitespace-pre-wrap">${noteText}</p>
+                            <span class="text-xs text-gray-500">${time}</span>
+                        </div>
+                    `;
+                    notesListElement.appendChild(li);
+                });
+            }, (error) => {
+                // Log the error and display a user-friendly message
+                console.error("Firestore snapshot error:", error);
+                notesListElement.innerHTML = `<li class="text-center text-red-500 p-4">Firestore Error: Check console for details. (Likely permissions, even after fix). Error: ${error.code}</li>`;
+            });
+        }
+
+        // Function to add a note
+        async function addNote() {
+            if (!userId) {
+                console.error("Cannot add note: User not authenticated.");
+                return;
+            }
+
+            const content = noteInputElement.value.trim();
+            if (content === "") return;
+
+            addNoteButton.disabled = true;
+
+            try {
+                await addDoc(collection(db, notesCollectionPath(userId)), {
+                    content: content,
+                    timestamp: serverTimestamp(),
+                });
+                noteInputElement.value = ''; // Clear input on success
+            } catch (error) {
+                console.error("Error adding document: ", error);
+            } finally {
+                addNoteButton.disabled = false;
+            }
+        }
+
+        // --- CORE FIX IMPLEMENTATION: Authentication Synchronization ---
+        async function setupFirebase() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                // Set debug logging for easier troubleshooting
+                setLogLevel('debug');
+                
+                // Listen for authentication state changes
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        // 1. User is signed in. Authentication is COMPLETE.
+                        userId = user.uid;
+                        authStatusElement.textContent = `Status: Logged In | User ID: ${userId}`;
+                        addNoteButton.disabled = false;
+                        
+                        // *** CRITICAL FIX: Only call the Firestore listener AFTER authentication is confirmed ***
+                        setupNotesListener(db, userId);
+                    } else if (initialAuthToken) {
+                        // 2. Not signed in, but we have a custom token. Attempt sign-in.
+                        authStatusElement.textContent = `Status: Signing in with custom token...`;
+                        try {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                            // This will trigger the 'user' block above upon success
+                        } catch(error) {
+                            console.error("Error signing in with custom token. Falling back to anonymous.", error);
+                            await signInAnonymously(auth);
+                        }
+                    } else {
+                        // 3. No token, sign in anonymously (fallback).
+                        authStatusElement.textContent = `Status: Signing in anonymously...`;
+                        const anonymousUserCredential = await signInAnonymously(auth);
+                        // This also triggers the 'user' block above
+                    }
+                });
+
+                // Set up event listeners for the UI
+                addNoteButton.addEventListener('click', addNote);
+            } catch (error) {
+                console.error("Firebase Initialization Error:", error);
+                authStatusElement.textContent = `Error during initialization. See console.`;
+            }
+        }
+
+        setupFirebase();
+
+    </script>
+</body>
+</html>
