@@ -25,6 +25,10 @@ For Students: To offer a 24/7, highly personalized, and hands-on learning compan
 For Educators: To automate tedious operational tasks, allowing human instructors to focus their expertise on high-value activities like complex project design, ethical discussions, and one-on-one mentorship for advanced topics. The system is designed to scale quality education without proportionally increasing instructional staff.
 
 # Demo: A Guided Debugging Agent 🛠️
+
+http://googleusercontent.com/image_generation_content/2
+
+
 A demonstration would showcase the "Code Debugging Agent" in action:
 
 Scenario: A student is stuck on an error in their Python web application code.
